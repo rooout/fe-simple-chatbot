@@ -5,7 +5,24 @@ import ChatInterface from '@/components/ChatInterface'
 import Login from '@/components/Login'
 
 const App = () => {
-  const { user, loading } = useAuth()
+  let user = null;
+  let loading = false;
+  let authError = null;
+
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+    loading = auth?.loading;
+    authError = auth?.authError;
+    
+    console.log('App component - Auth state:', { user: !!user, loading, authError });
+  } catch (error) {
+    console.log('Auth context error:', error);
+    // In local mode without proper auth setup, we can still show the login
+    user = null;
+    loading = false;
+    authError = 'Authentication not configured';
+  }
 
   if (loading) {
     return (

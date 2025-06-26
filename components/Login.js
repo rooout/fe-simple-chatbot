@@ -4,10 +4,20 @@ import { useState } from 'react'
 import { signInWithGoogle, signInWithGitHub } from '@/lib/supabase'
 import { Github, Chrome, Bot, Mail } from 'lucide-react'
 import EmailAuth from './EmailAuth'
+import { useAuth } from '@/contexts/AuthContext'
 
 const Login = () => {
   const [loading, setLoading] = useState('')
   const [showEmailAuth, setShowEmailAuth] = useState(false)
+  
+  let authContext = null;
+  try {
+    authContext = useAuth();
+  } catch (error) {
+    console.log('Auth context not available in Login component');
+  }
+  
+  const isSupabaseConfigured = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (showEmailAuth) {
     return (
@@ -23,7 +33,11 @@ const Login = () => {
       const { error } = await signInWithGoogle()
       if (error) {
         console.error('Google login error:', error)
-        alert('Failed to sign in with Google. Please try again.')
+        if (error.message.includes('not configured')) {
+          alert('Authentication is not configured. Please use "Skip Authentication" for testing or configure Supabase.')
+        } else {
+          alert('Failed to sign in with Google. Please try again.')
+        }
       }
     } catch (error) {
       console.error('Google login error:', error)
@@ -39,7 +53,11 @@ const Login = () => {
       const { error } = await signInWithGitHub()
       if (error) {
         console.error('GitHub login error:', error)
-        alert('Failed to sign in with GitHub. Please try again.')
+        if (error.message.includes('not configured')) {
+          alert('Authentication is not configured. Please use "Skip Authentication" for testing or configure Supabase.')
+        } else {
+          alert('Failed to sign in with GitHub. Please try again.')
+        }
       }
     } catch (error) {
       console.error('GitHub login error:', error)
@@ -50,8 +68,14 @@ const Login = () => {
   }
 
   const handleSkipAuth = () => {
-    localStorage.setItem('skipAuth', 'true')
-    window.location.reload()
+    console.log('Skipping authentication...')
+    
+    if (authContext?.skipAuthentication) {
+      authContext.skipAuthentication();
+    } else {
+      localStorage.setItem('skipAuth', 'true')
+      window.location.reload()
+    }
   }
 
   return (
@@ -71,6 +95,19 @@ const Login = () => {
             Sign in to save your chat history and get personalized recommendations
           </p>
         </div>
+
+        {/* Offline Mode Notice */}
+        {!isSupabaseConfigured && (
+          <div className="mb-6 p-3 bg-yellow-100 border border-yellow-300 rounded-lg">
+            <div className="flex items-center">
+              <span className="text-yellow-600 mr-2">⚠️</span>
+              <div>
+                <p className="text-sm font-medium text-yellow-800">Development Mode</p>
+                <p className="text-xs text-yellow-700">Database not configured. Use "Skip Authentication" to test the chat features.</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Features */}
         <div className="mb-8">
@@ -100,7 +137,12 @@ const Login = () => {
           {/* Email Authentication */}
           <button
             onClick={() => setShowEmailAuth(true)}
-            className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            disabled={!isSupabaseConfigured}
+            className={`w-full flex items-center justify-center px-4 py-3 rounded-lg font-medium transition-colors ${
+              isSupabaseConfigured 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             <Mail size={20} className="mr-3" />
             <span>Continue with Email</span>
@@ -118,28 +160,36 @@ const Login = () => {
 
           <button
             onClick={handleGoogleLogin}
-            disabled={loading === 'google'}
-            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading === 'google' || !isSupabaseConfigured}
+            className={`w-full flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
+              isSupabaseConfigured 
+                ? 'border-gray-300 hover:bg-gray-50 text-gray-700' 
+                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading === 'google' ? (
               <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin mr-3"></div>
             ) : (
-              <Chrome size={20} className="mr-3 text-red-500" />
+              <Chrome size={20} className={`mr-3 ${isSupabaseConfigured ? 'text-red-500' : 'text-gray-400'}`} />
             )}
-            <span className="font-medium text-gray-700">
+            <span className="font-medium">
               {loading === 'google' ? 'Signing in...' : 'Continue with Google'}
             </span>
           </button>
 
           <button
             onClick={handleGitHubLogin}
-            disabled={loading === 'github'}
-            className="w-full flex items-center justify-center px-4 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading === 'github' || !isSupabaseConfigured}
+            className={`w-full flex items-center justify-center px-4 py-3 rounded-lg transition-colors ${
+              isSupabaseConfigured 
+                ? 'bg-gray-900 text-white hover:bg-gray-800' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {loading === 'github' ? (
               <div className="w-5 h-5 border-2 border-gray-300 border-t-white rounded-full animate-spin mr-3"></div>
             ) : (
-              <Github size={20} className="mr-3" />
+              <Github size={20} className={`mr-3 ${isSupabaseConfigured ? 'text-white' : 'text-gray-400'}`} />
             )}
             <span className="font-medium">
               {loading === 'github' ? 'Signing in...' : 'Continue with GitHub'}
