@@ -27,25 +27,21 @@ const Login = () => {
     )
   }
 
-  const handleGoogleLogin = async () => {
-    setLoading('google')
-    try {
-      const { error } = await signInWithGoogle()
-      if (error) {
-        console.error('Google login error:', error)
-        if (error.message.includes('not configured')) {
-          alert('Authentication is not configured. Please use "Skip Authentication" for testing or configure Supabase.')
-        } else {
-          alert('Failed to sign in with Google. Please try again.')
-        }
-      }
-    } catch (error) {
-      console.error('Google login error:', error)
-      alert('Failed to sign in with Google. Please try again.')
-    } finally {
-      setLoading('')
+const handleGoogleSignIn = async () => {
+  setLoading('google')
+  try {
+    const { error } = await signInWithGoogle()
+    if (error) {
+      console.error('Google sign in error:', error)
+      alert('Failed to sign in with Google: ' + error.message)
     }
+  } catch (error) {
+    console.error('Google OAuth error:', error)
+    alert('An error occurred during Google sign in')
+  } finally {
+    setLoading('')
   }
+}
 
   const handleGitHubLogin = async () => {
     setLoading('github')
@@ -159,22 +155,12 @@ const Login = () => {
           </div>
 
           <button
-            onClick={handleGoogleLogin}
+            onClick={handleGoogleSignIn}
             disabled={loading === 'google' || !isSupabaseConfigured}
-            className={`w-full flex items-center justify-center px-4 py-3 border rounded-lg transition-colors ${
-              isSupabaseConfigured 
-                ? 'border-gray-300 hover:bg-gray-50 text-gray-700' 
-                : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading === 'google' ? (
-              <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin mr-3"></div>
-            ) : (
-              <Chrome size={20} className={`mr-3 ${isSupabaseConfigured ? 'text-red-500' : 'text-gray-400'}`} />
-            )}
-            <span className="font-medium">
-              {loading === 'google' ? 'Signing in...' : 'Continue with Google'}
-            </span>
+            <Chrome className="w-5 h-5 mr-3 text-blue-500" />
+            {loading === 'google' ? 'Signing in...' : 'Continue with Google'}
           </button>
 
           <button

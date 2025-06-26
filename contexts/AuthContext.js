@@ -29,93 +29,37 @@ export const AuthProvider = ({ children }) => {
   const [authError, setAuthError] = useState(null)
 
   useEffect(() => {
-    let mounted = true;
     
     const getInitialSession = async () => {
       try {
-        console.log('Getting initial session...')
-        
-        const skipAuth = typeof window !== 'undefined' && localStorage.getItem('skipAuth')
-        if (skipAuth) {
-          console.log('Authentication skipped for testing')
-          if (mounted) {
-            setUser({ id: 'test-user', email: 'test@example.com', user_metadata: { full_name: 'Test User' } })
-            setLoading(false)
-          }
-          return
-        }
-        
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-          console.warn('Supabase not configured, running in offline mode')
-          if (mounted) {
-            setUser(null)
-            setLoading(false)
-            setAuthError('Supabase not configured')
-          }
-          return
-        }
-        
-        const timeoutId = setTimeout(() => {
-          if (mounted) {
-            console.log('Session check timed out, assuming no user')
-            setUser(null)
-            setLoading(false)
-          }
-        }, 5000)
-        
         const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) throw error
         
-        clearTimeout(timeoutId)
-        
-        if (!mounted) return
-        
-        if (error) {
-          console.error('Error getting session:', error)
-          setUser(null)
-          setAuthError(error.message)
-        } else {
-          console.log('Initial session:', session)
-          setUser(session?.user ?? null)
-        }
-        
+        setUser(session?.user ?? null)
         setLoading(false)
       } catch (error) {
-        console.error('Error in getInitialSession:', error)
-        if (mounted) {
-          setUser(null)
-          setLoading(false)
-          setAuthError(error.message)
-        }
+        console.error('Session error:', error)
+        setAuthError(error.message)
+        setLoading(false)
       }
     }
 
     getInitialSession()
 
-    // Only set up auth listener if Supabase is configured
-    let subscription;
-    try {
-      if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-        const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state changed:', event, session)
-            if (mounted) {
-              setUser(session?.user ?? null)
-              setLoading(false)
-            }
-          }
-        )
-        subscription = authSubscription
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth event:', event, session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+        
+        if (event === 'SIGNED_IN' && session) {
+          // User successfully signed in
+          console.log('User signed in:', session.user)
+        }
       }
-    } catch (error) {
-      console.error('Error setting up auth listener:', error)
-    }
+    )
 
-    return () => {
-      mounted = false
-      if (subscription) {
-        subscription.unsubscribe()
-      }
-    }
+    return () => subscription.unsubscribe()
   }, [])
 
   const value = {
