@@ -18,7 +18,6 @@ const ChatInterface = () => {
     authLoading = auth?.loading;
   } catch (error) {
     console.log('Auth context not available, running without authentication');
-    // In local mode without auth, we can still use the app
     user = null;
     authLoading = false;
   }
@@ -331,7 +330,6 @@ const ChatInterface = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Chat History Sidebar - only show if authenticated */}
       {user && (
         <ChatHistorySidebar
           currentSessionId={currentSessionId}

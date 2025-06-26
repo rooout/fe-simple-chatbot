@@ -1,9 +1,4 @@
-# ========================================
-# AI Chatbot Project - Comprehensive .gitignore
-# ========================================
-
 # ====== ENVIRONMENT & CREDENTIALS ======
-# Never commit environment variables or API keys
 .env
 .env.local
 .env.development
