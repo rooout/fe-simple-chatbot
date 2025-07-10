@@ -1,7 +1,6 @@
 https://fe-simple-chatbot.vercel.app/
 
-For last update, auth doesn't work
-Use testing mode ("Skip Authentication")
+For last update, use google auth or testing mode to access chatbot
 
 Try to use this prompt :
 "berikan saya materi terkait AI"
@@ -10,5 +9,4 @@ Try to use this prompt :
 "apa itu SQL"
 
 
-
-26/6/2025
+REV 6/26/2025 10:50 PM
