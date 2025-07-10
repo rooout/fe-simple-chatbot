@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Lock, Eye, EyeOff } from 'lucide-react'
 
-export default function ResetPassword() {
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
@@ -159,5 +159,24 @@ export default function ResetPassword() {
         </form>
       </div>
     </div>
+  )
+}
+
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-xl p-8 text-center">
+        <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }

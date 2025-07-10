@@ -278,6 +278,11 @@ debug-*.js
 config.local.js
 settings.local.json
 
+
+.env.production.template
+.env.template
+.env.local.template
+
 # ========================================
 # END OF .gitignore
 # ========================================
